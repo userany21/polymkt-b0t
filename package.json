@@ -36,6 +36,7 @@
         "audit": "ts-node src/scripts/auditCopyTradingAlgorithmFixed.ts",
         "audit-old": "ts-node src/scripts/auditCopyTradingAlgorithm.ts",
         "health-check": "ts-node src/scripts/healthCheck.ts",
+        "discord-bot": "ts-node src/discord/bot.ts",
         "lint": "eslint .",
         "lint:fix": "eslint --fix .",
         "format": "prettier --write ."
@@ -69,6 +70,7 @@
         "dotenv": "^16.4.7",
         "ethers": "^5.8.0",
         "moment": "^2.30.1",
+        "discord.js": "^14.18.0",
         "mongoose": "^8.9.5",
         "ora": "^8.2.0"
     }

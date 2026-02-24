@@ -11,8 +11,8 @@ const POLYGON_CHAIN_ID = 137;
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
 
 // Market search query
-const MARKET_SEARCH_QUERY = 'Maduro out in 2025';
-const SELL_PERCENTAGE = 0.7; // 70%
+const MARKET_SEARCH_QUERY = 'Spread: Rockets';
+const SELL_PERCENTAGE = 1.0; // 70%
 
 interface Position {
     asset: string;
