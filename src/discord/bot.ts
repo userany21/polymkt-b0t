@@ -21,6 +21,7 @@ const ALLOWED_COMMANDS: Record<string, { cmd: string; args: string[] }> = {
     'npm run check-allowance':{ cmd: 'npm', args: ['run', 'check-allowance'] },
     'npm run redeem-resolved':{ cmd: 'npm', args: ['run', 'redeem-resolved'] },
     'npm run health-check':   { cmd: 'npm', args: ['run', 'health-check'] },
+    'npm run sell-large':     { cmd: 'npm', args: ['run', 'sell-large'] },
 };
 
 const HELP_TEXT = [
@@ -31,6 +32,7 @@ const HELP_TEXT = [
     '`npm run check-allowance` — check token allowance',
     '`npm run redeem-resolved` — redeem resolved positions',
     '`npm run health-check` — run health check',
+    '`npm run sell-large` — sell large positions',
     '`help` — show this message',
 ].join('\n');
 
