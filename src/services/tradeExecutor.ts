@@ -6,6 +6,7 @@ import fetchData from '../utils/fetchData';
 import getMyBalance from '../utils/getMyBalance';
 import postOrder from '../utils/postOrder';
 import Logger from '../utils/logger';
+import { calculateOrderSize } from '../config/copyStrategy';
 
 const USER_ADDRESSES = ENV.USER_ADDRESSES;
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
@@ -13,6 +14,7 @@ const PROXY_WALLET = ENV.PROXY_WALLET;
 const TRADE_AGGREGATION_ENABLED = ENV.TRADE_AGGREGATION_ENABLED;
 const TRADE_AGGREGATION_WINDOW_SECONDS = ENV.TRADE_AGGREGATION_WINDOW_SECONDS;
 const TRADE_AGGREGATION_MIN_TOTAL_USD = 1.0; // Polymarket minimum
+const COPY_STRATEGY_CONFIG = ENV.COPY_STRATEGY_CONFIG;
 
 // Create activity models for each user
 const userActivityModels = USER_ADDRESSES.map((address) => ({
@@ -296,16 +298,27 @@ const tradeExecutor = async (clobClient: ClobClient) => {
 
                 // Add trades to aggregation buffer
                 for (const trade of trades) {
-                    // Only aggregate BUY trades below minimum threshold
-                    if (trade.side === 'BUY' && trade.usdcSize < TRADE_AGGREGATION_MIN_TOTAL_USD) {
+                    // Use a large dummy balance to preview the raw calculated copy size
+                    // (independent of current balance) to decide whether to aggregate
+                    const previewCalc = calculateOrderSize(
+                        COPY_STRATEGY_CONFIG,
+                        trade.usdcSize,
+                        999999,
+                        0
+                    );
+                    const copyWouldBeBelowMin = previewCalc.belowMinimum;
+
+                    if (trade.side === 'BUY' && copyWouldBeBelowMin) {
                         Logger.info(
-                            `Adding $${trade.usdcSize.toFixed(2)} ${trade.side} trade to aggregation buffer for ${trade.slug || trade.asset}`
+                            `📥 Buffering trade: $${trade.usdcSize.toFixed(2)} from trader → copy $${previewCalc.baseAmount.toFixed(2)} < $${TRADE_AGGREGATION_MIN_TOTAL_USD} min (${trade.slug || trade.asset.slice(0, 8)}...)`
                         );
                         addToAggregationBuffer(trade);
                     } else {
                         // Execute large trades immediately (not aggregated)
                         Logger.clearLine();
-                        Logger.header(`⚡ IMMEDIATE TRADE (above threshold)`);
+                        Logger.header(
+                            `⚡ IMMEDIATE TRADE (copy est. $${previewCalc.baseAmount.toFixed(2)})`
+                        );
                         await doTrading(clobClient, [trade]);
                     }
                 }

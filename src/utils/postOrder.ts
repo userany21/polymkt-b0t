@@ -63,6 +63,24 @@ const isInsufficientBalanceOrAllowanceError = (message: string | undefined): boo
     return lower.includes('not enough balance') || lower.includes('allowance');
 };
 
+/**
+ * Returns true for errors that will never succeed on retry (geoblock, forbidden, etc.)
+ * Retrying these wastes API quota and time.
+ */
+const isFatalOrderError = (message: string | undefined): boolean => {
+    if (!message) {
+        return false;
+    }
+    const lower = message.toLowerCase();
+    return (
+        lower.includes('restricted') ||
+        lower.includes('geoblock') ||
+        lower.includes('forbidden') ||
+        lower.includes('not authorized') ||
+        lower.includes('unauthorized')
+    );
+};
+
 const postOrder = async (
     clobClient: ClobClient,
     condition: string,
@@ -136,6 +154,14 @@ const postOrder = async (
                 remaining -= order_arges.amount;
             } else {
                 const errorMessage = extractOrderError(resp);
+                if (isFatalOrderError(errorMessage)) {
+                    Logger.error(`Fatal error - cannot execute merge: ${errorMessage}`);
+                    Logger.warning(
+                        '💡 Bot needs to run from a non-restricted region. Set PROXY_URL in .env.'
+                    );
+                    await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                    return;
+                }
                 if (isInsufficientBalanceOrAllowanceError(errorMessage)) {
                     abortDueToFunds = true;
                     Logger.warning(
@@ -259,6 +285,17 @@ const postOrder = async (
                 remaining -= order_arges.amount;
             } else {
                 const errorMessage = extractOrderError(resp);
+                if (isFatalOrderError(errorMessage)) {
+                    Logger.error(`Fatal error - cannot execute buy: ${errorMessage}`);
+                    Logger.warning(
+                        '💡 Bot needs to run from a non-restricted region. Set PROXY_URL in .env.'
+                    );
+                    await UserActivity.updateOne(
+                        { _id: trade._id },
+                        { bot: true, myBoughtSize: totalBoughtTokens }
+                    );
+                    return;
+                }
                 if (isInsufficientBalanceOrAllowanceError(errorMessage)) {
                     abortDueToFunds = true;
                     Logger.warning(
@@ -305,7 +342,22 @@ const postOrder = async (
         Logger.info('Executing SELL strategy...');
         let remaining = 0;
         if (!my_position) {
-            Logger.warning('No position to sell');
+            // Check if we ever bought this asset - if not, this is expected behaviour
+            const hasPriorBuy = await UserActivity.exists({
+                asset: trade.asset,
+                conditionId: trade.conditionId,
+                side: 'BUY',
+                bot: true,
+            });
+            if (hasPriorBuy) {
+                Logger.warning(
+                    `⚠ Trader sold but no position found — position may have resolved or been manually closed`
+                );
+            } else {
+                Logger.info(
+                    `ℹ Trader sold ${trade.slug || trade.asset.slice(0, 8)}... but we never bought this asset — skipping`
+                );
+            }
             await UserActivity.updateOne({ _id: trade._id }, { bot: true });
             return;
         }
@@ -449,6 +501,14 @@ const postOrder = async (
                 remaining -= order_arges.amount;
             } else {
                 const errorMessage = extractOrderError(resp);
+                if (isFatalOrderError(errorMessage)) {
+                    Logger.error(`Fatal error - cannot execute sell: ${errorMessage}`);
+                    Logger.warning(
+                        '💡 Bot needs to run from a non-restricted region. Set PROXY_URL in .env.'
+                    );
+                    await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                    return;
+                }
                 if (isInsufficientBalanceOrAllowanceError(errorMessage)) {
                     abortDueToFunds = true;
                     Logger.warning(
