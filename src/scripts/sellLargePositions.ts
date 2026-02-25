@@ -11,8 +11,8 @@ const RPC_URL = ENV.RPC_URL;
 const POLYGON_CHAIN_ID = 137;
 const RETRY_LIMIT = ENV.RETRY_LIMIT;
 
-const SELL_PERCENTAGE = 0.8; // 80%
-const MIN_POSITION_VALUE = 17; // Only sell positions > $17
+const SELL_PERCENTAGE = 1.0; // 80%
+const MIN_POSITION_VALUE = 0; // Only sell positions > $17
 
 interface Position {
     asset: string;
