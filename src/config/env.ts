@@ -114,6 +114,27 @@ const validateNumericConfig = (): void => {
             `Invalid NETWORK_RETRY_LIMIT: ${process.env.NETWORK_RETRY_LIMIT}. Must be between 1 and 10.`
         );
     }
+
+    const stopLossPercent = parseFloat(process.env.STOP_LOSS_PERCENT || '30');
+    if (isNaN(stopLossPercent) || stopLossPercent <= 0 || stopLossPercent >= 100) {
+        throw new Error(
+            `Invalid STOP_LOSS_PERCENT: ${process.env.STOP_LOSS_PERCENT}. Must be between 0 and 100 (exclusive).`
+        );
+    }
+
+    const timeExitDays = parseInt(process.env.TIME_EXIT_DAYS || '60', 10);
+    if (isNaN(timeExitDays) || timeExitDays < 1) {
+        throw new Error(
+            `Invalid TIME_EXIT_DAYS: ${process.env.TIME_EXIT_DAYS}. Must be a positive integer.`
+        );
+    }
+
+    const positionCheckInterval = parseInt(process.env.POSITION_CHECK_INTERVAL_SECONDS || '300', 10);
+    if (isNaN(positionCheckInterval) || positionCheckInterval < 10) {
+        throw new Error(
+            `Invalid POSITION_CHECK_INTERVAL_SECONDS: ${process.env.POSITION_CHECK_INTERVAL_SECONDS}. Must be at least 10 seconds.`
+        );
+    }
 };
 
 /**
@@ -345,6 +366,15 @@ export const ENV = {
         process.env.TRADE_AGGREGATION_WINDOW_SECONDS || '300',
         10
     ), // 5 minutes default
+    // Stop-loss & time exit settings
+    STOP_LOSS_ENABLED: process.env.STOP_LOSS_ENABLED !== 'false',
+    STOP_LOSS_PERCENT: parseFloat(process.env.STOP_LOSS_PERCENT || '30'),
+    TIME_EXIT_ENABLED: process.env.TIME_EXIT_ENABLED !== 'false',
+    TIME_EXIT_DAYS: parseInt(process.env.TIME_EXIT_DAYS || '60', 10),
+    POSITION_CHECK_INTERVAL_SECONDS: parseInt(
+        process.env.POSITION_CHECK_INTERVAL_SECONDS || '300',
+        10
+    ),
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string,

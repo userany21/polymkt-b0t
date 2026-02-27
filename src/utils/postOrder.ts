@@ -16,6 +16,9 @@ const COPY_PERCENTAGE = ENV.COPY_PERCENTAGE;
 const MIN_ORDER_SIZE_USD = 1.0; // Minimum order size in USD for BUY orders
 const MIN_ORDER_SIZE_TOKENS = 1.0; // Minimum order size in tokens for SELL/MERGE orders
 
+// Minimum token price to buy - blocks dead/resolved markets where only losing side has sellers
+const MIN_TOKEN_PRICE = 0.02; // 2¢ floor
+
 const extractOrderError = (response: unknown): string | undefined => {
     if (!response) {
         return undefined;
@@ -240,6 +243,16 @@ const postOrder = async (
             }, orderBook.asks[0]);
 
             Logger.info(`Best ask: ${minPriceAsk.size} @ $${minPriceAsk.price}`);
+
+            // Fix 1: Price floor - if ask is below 2¢, this market is effectively dead (resolved or losing side dump)
+            if (parseFloat(minPriceAsk.price) < MIN_TOKEN_PRICE) {
+                Logger.warning(
+                    `❌ Price floor triggered: best ask $${minPriceAsk.price} is below minimum $${MIN_TOKEN_PRICE} — market likely resolved, skipping`
+                );
+                await UserActivity.updateOne({ _id: trade._id }, { bot: true });
+                break;
+            }
+
             if (parseFloat(minPriceAsk.price) - 0.05 > trade.price) {
                 Logger.warning('Price slippage too high - skipping trade');
                 await UserActivity.updateOne({ _id: trade._id }, { bot: true });

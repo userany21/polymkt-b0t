@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { ENV } from './env';
 import chalk from 'chalk';
 
-const uri = ENV.MONGO_URI || 'mongodb://localhost:27017/polymarket_copytrading';
+const uri = ENV.MONGO_URI;
 
 const connectDB = async () => {
     try {
