@@ -94,6 +94,11 @@ const postOrder = async (
     user_balance: number,
     userAddress: string
 ) => {
+    if (ENV.PREVIEW_MODE) {
+        Logger.warning(`[PREVIEW MODE] Would execute ${condition.toUpperCase()} — ${trade.asset.slice(0, 10)}... $${trade.usdcSize?.toFixed(2) ?? '?'} — no order sent`);
+        return;
+    }
+
     const UserActivity = getUserActivityModel(userAddress);
     //Merge strategy
     if (condition === 'merge') {

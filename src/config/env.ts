@@ -375,6 +375,7 @@ export const ENV = {
         process.env.POSITION_CHECK_INTERVAL_SECONDS || '300',
         10
     ),
+    PREVIEW_MODE: process.env.PREVIEW_MODE === 'true',
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,
     USDC_CONTRACT_ADDRESS: process.env.USDC_CONTRACT_ADDRESS as string,
