@@ -16,12 +16,19 @@ if (!BOT_TOKEN || !COMMAND_CHANNEL_ID) {
 const ROOT = path.resolve(__dirname, '../../');
 
 const ALLOWED_COMMANDS: Record<string, { cmd: string; args: string[] }> = {
-    'npm start':              { cmd: 'npm', args: ['start'] },
-    'npm run check-stats':    { cmd: 'npm', args: ['run', 'check-stats'] },
-    'npm run check-allowance':{ cmd: 'npm', args: ['run', 'check-allowance'] },
-    'npm run redeem-resolved':{ cmd: 'npm', args: ['run', 'redeem-resolved'] },
-    'npm run health-check':   { cmd: 'npm', args: ['run', 'health-check'] },
-    'npm run sell-large':     { cmd: 'npm', args: ['run', 'sell-large'] },
+    'npm start': { cmd: 'npm', args: ['start'] },
+    'npm run check-stats': { cmd: 'npm', args: ['run', 'check-stats'] },
+    'npm run check-allowance': { cmd: 'npm', args: ['run', 'check-allowance'] },
+    'npm run redeem-resolved': { cmd: 'npm', args: ['run', 'redeem-resolved'] },
+    'npm run health-check': { cmd: 'npm', args: ['run', 'health-check'] },
+    'npm run sell-large': { cmd: 'npm', args: ['run', 'sell-large'] },
+    'pm2 status': { cmd: 'pm2', args: ['status'] },
+    'pm2 stop polymarket-bot': { cmd: 'pm2', args: ['stop', 'polymarket-bot'] },
+    'pm2 restart polymarket-bot': { cmd: 'pm2', args: ['restart', 'polymarket-bot'] },
+    'pm2 logs 200': {
+        cmd: 'pm2',
+        args: ['logs', 'polymarket-bot', '--lines', '200', '--nostream'],
+    },
 };
 
 const HELP_TEXT = [
@@ -33,6 +40,13 @@ const HELP_TEXT = [
     '`npm run redeem-resolved` — redeem resolved positions',
     '`npm run health-check` — run health check',
     '`npm run sell-large` — sell large positions',
+    '',
+    '**PM2 commands:**',
+    '`pm2 status` — show PM2 process status',
+    '`pm2 stop polymarket-bot` — stop the bot',
+    '`pm2 restart polymarket-bot` — restart the bot',
+    '`pm2 logs 200` — show last 200 log lines',
+    '',
     '`help` — show this message',
 ].join('\n');
 
@@ -83,7 +97,9 @@ client.on('messageCreate', async (message: Message) => {
     }
 
     if (content === 'status') {
-        await channel.send(activeProcess ? 'A process is currently running.' : 'No process running.');
+        await channel.send(
+            activeProcess ? 'A process is currently running.' : 'No process running.'
+        );
         return;
     }
 
