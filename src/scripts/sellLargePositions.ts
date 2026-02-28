@@ -258,7 +258,7 @@ async function main() {
         console.log(`Found ${positions.length} position(s)\n`);
 
         // Filter large positions
-        const largePositions = positions.filter((p) => p.currentValue > MIN_POSITION_VALUE);
+        const largePositions = positions.filter((p) => p.currentValue > MIN_POSITION_VALUE && p.cashPnl > 0);
 
         if (largePositions.length === 0) {
             console.log(`✅ No positions larger than $${MIN_POSITION_VALUE} found.`);
