@@ -135,6 +135,13 @@ const validateNumericConfig = (): void => {
             `Invalid POSITION_CHECK_INTERVAL_SECONDS: ${process.env.POSITION_CHECK_INTERVAL_SECONDS}. Must be at least 10 seconds.`
         );
     }
+
+    const winCheckInterval = parseInt(process.env.WIN_CHECK_INTERVAL_SECONDS || '300', 10);
+    if (isNaN(winCheckInterval) || winCheckInterval < 10) {
+        throw new Error(
+            `Invalid WIN_CHECK_INTERVAL_SECONDS: ${process.env.WIN_CHECK_INTERVAL_SECONDS}. Must be at least 10 seconds.`
+        );
+    }
 };
 
 /**
@@ -375,6 +382,9 @@ export const ENV = {
         process.env.POSITION_CHECK_INTERVAL_SECONDS || '300',
         10
     ),
+    // Win auto-redeem settings
+    WIN_AUTO_REDEEM_ENABLED: process.env.WIN_AUTO_REDEEM_ENABLED !== 'false',
+    WIN_CHECK_INTERVAL_SECONDS: parseInt(process.env.WIN_CHECK_INTERVAL_SECONDS || '300', 10),
     PREVIEW_MODE: process.env.PREVIEW_MODE === 'true',
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,

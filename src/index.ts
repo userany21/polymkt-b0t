@@ -4,6 +4,7 @@ import createClobClient from './utils/createClobClient';
 import tradeExecutor, { stopTradeExecutor } from './services/tradeExecutor';
 import tradeMonitor, { stopTradeMonitor } from './services/tradeMonitor';
 import positionMonitor, { stopPositionMonitor } from './services/positionMonitor';
+import winRedeemer, { stopWinRedeemer } from './services/winRedeemer';
 import Logger from './utils/logger';
 import { performHealthCheck, logHealthCheck } from './utils/healthCheck';
 
@@ -28,6 +29,7 @@ const gracefulShutdown = async (signal: string) => {
         stopTradeMonitor();
         stopTradeExecutor();
         stopPositionMonitor();
+        stopWinRedeemer();
 
         // Give services time to finish current operations
         Logger.info('Waiting for services to finish current operations...');
@@ -101,6 +103,11 @@ export const main = async () => {
 
         Logger.info('Starting position monitor...');
         positionMonitor(clobClient);
+
+        if (ENV.WIN_AUTO_REDEEM_ENABLED) {
+            Logger.info('Starting win redeemer...');
+            winRedeemer(clobClient);
+        }
 
         // test(clobClient);
     } catch (error) {
