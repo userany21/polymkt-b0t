@@ -381,7 +381,7 @@ function getDashboardHTML(): string {
   }
 
   function render(data) {
-    const positions = data.positions || [];
+    const positions = (data.positions || []).filter(p => (p.curPrice || 0) > 0.001);
     const activities = data.activities || [];
 
     document.getElementById('wallet-addr').textContent =
