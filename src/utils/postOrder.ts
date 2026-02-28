@@ -17,7 +17,7 @@ const MIN_ORDER_SIZE_USD = 1.0; // Minimum order size in USD for BUY orders
 const MIN_ORDER_SIZE_TOKENS = 1.0; // Minimum order size in tokens for SELL/MERGE orders
 
 // Minimum token price to buy - blocks dead/resolved markets where only losing side has sellers
-const MIN_TOKEN_PRICE = 0.02; // 2¢ floor
+const MIN_TOKEN_PRICE = 0.05; // 2¢ floor
 
 const extractOrderError = (response: unknown): string | undefined => {
     if (!response) {
