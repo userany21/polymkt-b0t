@@ -15,6 +15,7 @@ const TRADE_AGGREGATION_ENABLED = ENV.TRADE_AGGREGATION_ENABLED;
 const TRADE_AGGREGATION_WINDOW_SECONDS = ENV.TRADE_AGGREGATION_WINDOW_SECONDS;
 const TRADE_AGGREGATION_MIN_TOTAL_USD = 1.0; // Polymarket minimum
 const COPY_STRATEGY_CONFIG = ENV.COPY_STRATEGY_CONFIG;
+const MIN_TIME_TO_EXPIRY_MINUTES = ENV.MIN_TIME_TO_EXPIRY_MINUTES;
 
 // Create activity models for each user
 const userActivityModels = USER_ADDRESSES.map((address) => ({
@@ -176,6 +177,24 @@ const doTrading = async (clobClient: ClobClient, trades: TradeWithUser[]) => {
             (position: UserPositionInterface) => position.asset === trade.asset
         );
 
+        // Market expiry guard: skip BUY trades on markets closing soon
+        if (trade.side === 'BUY' && MIN_TIME_TO_EXPIRY_MINUTES > 0) {
+            const endDateStr = user_position?.endDate || my_position?.endDate;
+            if (endDateStr) {
+                const minutesToExpiry = (new Date(endDateStr).getTime() - Date.now()) / 60000;
+                if (minutesToExpiry < MIN_TIME_TO_EXPIRY_MINUTES) {
+                    Logger.warning(
+                        `⏰ Market expires in ${minutesToExpiry.toFixed(1)} min (< ${MIN_TIME_TO_EXPIRY_MINUTES} min threshold) — skipping BUY to avoid near-expiry loss`
+                    );
+                    await getUserActivityModel(trade.userAddress).updateOne(
+                        { _id: trade._id },
+                        { bot: true }
+                    );
+                    continue;
+                }
+            }
+        }
+
         // Get USDC balance
         const my_balance = await getMyBalance(PROXY_WALLET);
 
@@ -232,6 +251,26 @@ const doAggregatedTrading = async (clobClient: ClobClient, aggregatedTrades: Agg
         const user_position = user_positions.find(
             (position: UserPositionInterface) => position.asset === agg.asset
         );
+
+        // Market expiry guard: skip BUY trades on markets closing soon
+        if (agg.side === 'BUY' && MIN_TIME_TO_EXPIRY_MINUTES > 0) {
+            const endDateStr = user_position?.endDate || my_position?.endDate;
+            if (endDateStr) {
+                const minutesToExpiry = (new Date(endDateStr).getTime() - Date.now()) / 60000;
+                if (minutesToExpiry < MIN_TIME_TO_EXPIRY_MINUTES) {
+                    Logger.warning(
+                        `⏰ Market expires in ${minutesToExpiry.toFixed(1)} min (< ${MIN_TIME_TO_EXPIRY_MINUTES} min threshold) — skipping aggregated BUY to avoid near-expiry loss`
+                    );
+                    for (const trade of agg.trades) {
+                        await getUserActivityModel(trade.userAddress).updateOne(
+                            { _id: trade._id },
+                            { bot: true }
+                        );
+                    }
+                    continue;
+                }
+            }
+        }
 
         // Get USDC balance
         const my_balance = await getMyBalance(PROXY_WALLET);

@@ -385,6 +385,8 @@ export const ENV = {
     // Win auto-redeem settings
     WIN_AUTO_REDEEM_ENABLED: process.env.WIN_AUTO_REDEEM_ENABLED !== 'false',
     WIN_CHECK_INTERVAL_SECONDS: parseInt(process.env.WIN_CHECK_INTERVAL_SECONDS || '300', 10),
+    // Market expiry guard - skip BUY trades if market closes in less than this many minutes
+    MIN_TIME_TO_EXPIRY_MINUTES: parseInt(process.env.MIN_TIME_TO_EXPIRY_MINUTES || '30', 10),
     PREVIEW_MODE: process.env.PREVIEW_MODE === 'true',
     MONGO_URI: process.env.MONGO_URI as string,
     RPC_URL: process.env.RPC_URL as string,
